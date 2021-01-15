@@ -1,43 +1,31 @@
 import React, { useEffect } from "react";
 import { useQuery } from '@apollo/react-hooks';
+import { connect } from 'react-redux';
 import { QUERY_CATEGORIES } from "../../utils/queries";
-import { useStoreContext } from "../../utils/GlobalState";
-import { UPDATE_CATEGORIES, UPDATE_CURRENT_CATEGORY } from "../../utils/actions";
+import { updateCategories, updateCurrentCategory } from '../../redux/actions';
 import { idbPromise } from "../../utils/helpers";
 
-function CategoryMenu({ setCategory }) {
-  const [state, dispatch] = useStoreContext();
-
-  const { categories } = state;
-
+function CategoryMenu({ categories, updateCategories, updateCurrentCategory }) {
   const { loading, data: categoryData } = useQuery(QUERY_CATEGORIES);
 
   useEffect(() => {
     // if categoryData exists for has changed from the response of useQuery, then run dispatch()
     if (categoryData) {
       // execute our dispatch function with our action object indicating the type of action and the data to set our state for categories to
-      dispatch({
-        type: UPDATE_CATEGORIES,
-        categories: categoryData.categories
-      });
+      updateCategories(categoryData.categories);
+
       categoryData.categories.forEach(category => {
         idbPromise('categories', 'put', category);
       });
     } else if (!loading) {
       idbPromise('categories', 'get').then(categories => {
-        dispatch({
-          type: UPDATE_CATEGORIES,
-          categories: categories
-        });
+        updateCategories(categories);
       });
     }
-  }, [categoryData, loading, dispatch]);
+  }, [categoryData, loading, updateCategories]);
 
   const handleClick = id => {
-    dispatch({
-      type: UPDATE_CURRENT_CATEGORY,
-      currentCategory: id
-    });
+    updateCurrentCategory(id);
   };
 
   return (
@@ -57,4 +45,12 @@ function CategoryMenu({ setCategory }) {
   );
 }
 
-export default CategoryMenu;
+export default connect(
+  state => ({
+    categories: state.categories
+  }),
+  {
+    updateCategories,
+    updateCurrentCategory
+  }
+)(CategoryMenu);

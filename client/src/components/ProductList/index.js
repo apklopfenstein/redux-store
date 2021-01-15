@@ -1,27 +1,22 @@
 import React, { useEffect } from "react";
 import { useQuery } from '@apollo/react-hooks';
-import { useStoreContext } from '../../utils/GlobalState';
-import { UPDATE_PRODUCTS } from '../../utils/actions';
-
+import { connect } from 'react-redux';
+import { updateProducts} from '../../redux/actions';
 import ProductItem from "../ProductItem";
 import { QUERY_PRODUCTS } from "../../utils/queries";
 import spinner from "../../assets/spinner.gif"
-
 import { idbPromise } from '../../utils/helpers';
 
-function ProductList() {
-  const [state, dispatch] = useStoreContext();
-
-  const { currentCategory } = state;
-
+function ProductList({ products, currentCategory, updateProducts }) {
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
   useEffect(() => {
     if(data) {
-      dispatch({
-        type: UPDATE_PRODUCTS,
-        products: data.products
-      });
+      updateProducts(data.products);
+      // dispatch({
+      //   type: UPDATE_PRODUCTS,
+      //   products: data.products
+      // });
 
       // save each product to IndexedDB using the helper function also
       data.products.forEach((product) => {
@@ -31,35 +26,32 @@ function ProductList() {
       // since we're offline, get all of the data from the `products` store
       idbPromise('products', 'get').then((products) => {
         // use retrieved data to set global state for offline browsing
-        dispatch({
-          type: UPDATE_PRODUCTS,
-          products: products
-        });
+        updateProducts(products);
+        // dispatch({
+        //   type: UPDATE_PRODUCTS,
+        //   products: products
+        // });
       });
     }
-  }, [data, loading, dispatch]);
+  }, [data, loading, updateProducts]);
 
   function filterProducts() {
     if(!currentCategory) {
-      return state.products;
+      return products;
     }
 
-    return state.products.filter(product => product.category._id === currentCategory);
+    return products.filter(product => product.category._id === currentCategory);
   }
 
   return (
     <div className="my-2">
       <h2>Our Products:</h2>
-      {state.products.length ? (
+      {products.length ? (
         <div className="flex-row">
             {filterProducts().map(product => (
                 <ProductItem
-                  key= {product._id}
-                  _id={product._id}
-                  image={product.image}
-                  name={product.name}
-                  price={product.price}
-                  quantity={product.quantity}
+                  key={product._id}
+                  item={product}
                 />
             ))}
         </div>
@@ -72,4 +64,12 @@ function ProductList() {
   );
 }
 
-export default ProductList;
+export default connect(
+  state => ({
+    currentCategory: state.currentCategory,
+    products: state.products
+  }),
+  {
+    updateProducts
+  }
+)(ProductList);

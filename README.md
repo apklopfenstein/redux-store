@@ -8,4 +8,4 @@ The purpose of this refactor is to replace the Context API with Redux to manage 
 
 ## Links
 [GitHub Repo](https://github.com/apklopfenstein/redux-store)<br>
-[Deployed App]()
+[Deployed App](https://thawing-shelf-66564.herokuapp.com/)

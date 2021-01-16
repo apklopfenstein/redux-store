@@ -1,11 +1,13 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { removeFromCart, updateCartQuantity } from '../../redux/actions';
 import { idbPromise } from '../../utils/helpers';
 
-const CartItem = ({ item, removeFromCart, updateCartQuantity }) => {
+const CartItem = ({ item }) => {
+    const dispatch = useDispatch();
+
     const handleRemoveFromCart = item => {
-        removeFromCart(item._id);
+        dispatch(removeFromCart(item._id));
         idbPromise('cart', 'delete', { ...item });
     };
 
@@ -17,12 +19,7 @@ const CartItem = ({ item, removeFromCart, updateCartQuantity }) => {
 
             idbPromise('cart', 'delete', { ...item });
         } else {
-            updateCartQuantity(item._id, parseInt(value));
-            // dispatch({
-            //     type: UPDATE_CART_QUANTITY,
-            //     _id: item._id,
-            //     purchaseQuantity: parseInt(value)
-            // });
+            dispatch(updateCartQuantity(item._id, parseInt(value)));
 
             idbPromise('cart', 'put', { ...item, purchaseQuantity: parseInt(value) });
         }
@@ -45,10 +42,4 @@ const CartItem = ({ item, removeFromCart, updateCartQuantity }) => {
     );
 }
 
-export default connect(
-    null,
-    {
-        removeFromCart,
-        updateCartQuantity
-    }
-) (CartItem);
+export default CartItem;

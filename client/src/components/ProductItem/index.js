@@ -1,11 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { pluralize } from "../../utils/helpers";
 import { addToCart, updateCartQuantity } from '../../redux/actions';
 import { idbPromise } from '../../utils/helpers';
 
-function ProductItem({ cart, item, addToCart, updateCartQuantity }) {
+function ProductItem({ item }) {
   const {
     image,
     name,
@@ -14,27 +14,23 @@ function ProductItem({ cart, item, addToCart, updateCartQuantity }) {
     quantity
   } = item;
 
+  const dispatch = useDispatch();
+  const cart = useSelector(state => state.cart);
+
   const handleAddToCart = () => {
     // find the cart item with the matching id
     const itemInCart = cart.find((cartItem) => cartItem._id === _id);
 
     if (itemInCart) {
-      updateCartQuantity(_id, parseInt(itemInCart.purchaseQuantity) + 1);
-      // dispatch({
-      //   type: UPDATE_CART_QUANTITY,
-      //   _id: _id,
-      //   purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
-      // });
+      dispatch(updateCartQuantity(_id, parseInt(itemInCart.purchaseQuantity) + 1));
+      
       idbPromise('cart', 'put', {
         ...itemInCart,
         purchaseQuantity: parseInt(itemInCart.purchaseQuantity) + 1
       });
     } else {
-      addToCart(item);
-      // dispatch({
-      //   type: ADD_TO_CART,
-      //   product: { ...item, purchaseQuantity: 1 }
-      // });
+      dispatch(addToCart(item));
+      
       idbPromise('cart', 'put', { ...item, purchaseQuantity: 1 });
     }
   };
@@ -57,12 +53,4 @@ function ProductItem({ cart, item, addToCart, updateCartQuantity }) {
   );
 }
 
-export default connect(
-  state => ({
-    cart: state.cart
-  }),
-  {
-    addToCart,
-    updateCartQuantity
-  }
-)(ProductItem);
+export default ProductItem;

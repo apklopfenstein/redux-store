@@ -1,22 +1,24 @@
 import React, { useEffect } from "react";
 import { useQuery } from '@apollo/react-hooks';
-import { connect } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateProducts} from '../../redux/actions';
 import ProductItem from "../ProductItem";
 import { QUERY_PRODUCTS } from "../../utils/queries";
 import spinner from "../../assets/spinner.gif"
 import { idbPromise } from '../../utils/helpers';
 
-function ProductList({ products, currentCategory, updateProducts }) {
+function ProductList() {
+  const dispatch = useDispatch();
+  const { currentCategory, products } = useSelector(state => ({
+    currentCategory: state.currentCategory,
+    products: state.products
+  }));
+
   const { loading, data } = useQuery(QUERY_PRODUCTS);
 
   useEffect(() => {
     if(data) {
-      updateProducts(data.products);
-      // dispatch({
-      //   type: UPDATE_PRODUCTS,
-      //   products: data.products
-      // });
+      dispatch(updateProducts(data.products));
 
       // save each product to IndexedDB using the helper function also
       data.products.forEach((product) => {
@@ -26,14 +28,10 @@ function ProductList({ products, currentCategory, updateProducts }) {
       // since we're offline, get all of the data from the `products` store
       idbPromise('products', 'get').then((products) => {
         // use retrieved data to set global state for offline browsing
-        updateProducts(products);
-        // dispatch({
-        //   type: UPDATE_PRODUCTS,
-        //   products: products
-        // });
+        dispatch(updateProducts(products));
       });
     }
-  }, [data, loading, updateProducts]);
+  }, [data, loading, dispatch]);
 
   function filterProducts() {
     if(!currentCategory) {
@@ -64,12 +62,4 @@ function ProductList({ products, currentCategory, updateProducts }) {
   );
 }
 
-export default connect(
-  state => ({
-    currentCategory: state.currentCategory,
-    products: state.products
-  }),
-  {
-    updateProducts
-  }
-)(ProductList);
+export default ProductList;
